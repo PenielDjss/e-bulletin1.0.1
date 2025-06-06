@@ -3,58 +3,72 @@ import NavBar from '../components/NavBar';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MainLayout({ children, userInitial = 'U' }) {
-     const [isMenuOpen, setIsMenuOpen] = useState(() => {
-        const saved = localStorage.getItem('sidebarOpen');
-        return saved !== null ? JSON.parse(saved) : false;
-    });
+    // État pour mobile/tablette uniquement
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Sauvegarder l'état dans localStorage à chaque changement
+    // Fermer le menu mobile quand on redimensionne vers desktop
     useEffect(() => {
-        localStorage.setItem('sidebarOpen', JSON.stringify(isMenuOpen));
-    }, [isMenuOpen]);
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) { // lg breakpoint
+                setIsMobileMenuOpen(false);
+            }
+        };
 
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Overlay sombre quand le menu est ouvert sur mobile */}
+            {/* Overlay sombre quand le menu mobile est ouvert */}
             <AnimatePresence>
-                {isMenuOpen && (
+                {isMobileMenuOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 0.5 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 bg-black lg:hidden z-20"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={() => setIsMobileMenuOpen(false)}
                     />
                 )}
             </AnimatePresence>
 
-            {/* Sidebar avec position absolute/fixed */}
+            {/* Sidebar Desktop - Toujours visible sur desktop */}
+            <aside className="hidden lg:block fixed top-0 left-0 h-full w-[190px] bg-white shadow-lg z-30">
+                <NavBar userInitial={userInitial} variant="sidebar" />
+            </aside>
+
+            {/* Sidebar Mobile - Animée seulement sur mobile/tablette */}
             <motion.aside
                 initial={false}
                 animate={{ 
-                    x: isMenuOpen ? 0 : '-100%'
+                    x: isMobileMenuOpen ? 0 : '-100%'
                 }}
-                className="fixed top-0 left-0 h-full w-[190px] bg-white shadow-lg z-30"
+                className="lg:hidden fixed top-0 left-0 h-full w-[190px] bg-white shadow-lg z-30"
                 transition={{ type: "tween", duration: 0.3 }}
             >
-                <NavBar userInitial={userInitial} variant="sidebar" />
+                <NavBar 
+                    userInitial={userInitial} 
+                    variant="sidebar" 
+                    onCloseMobile={() => setIsMobileMenuOpen(false)}
+                    showCloseButton={true}
+                />
             </motion.aside>
 
-            {/* Main content area - toujours à la même position */}
-            <div className="lg:pl-[190px]"> {/* Marge fixe sur desktop uniquement */}
-                {/* Topbar - fixed */}
+            {/* Main content area */}
+            <div className="lg:pl-[190px]">
+                {/* Topbar */}
                 <header className="fixed top-0 right-0 left-0 lg:left-[190px] h-14 bg-white shadow-sm z-20">
                     <NavBar 
                         userInitial={userInitial} 
                         variant="topbar"
-                        isMenuOpen={isMenuOpen}
-                        onToggleMenu={() => setIsMenuOpen(!isMenuOpen)}
+                        isMobileMenuOpen={isMobileMenuOpen}
+                        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     />
                 </header>
 
-                {/* Main content - scrollable */}
-                <main className="pt-14"> {/* Ajusté pour la hauteur de la topbar */}
+                {/* Main content */}
+                <main className="pt-14">
                     <div className="p-6">
                         {children}
                     </div>
@@ -62,5 +76,4 @@ export default function MainLayout({ children, userInitial = 'U' }) {
             </div>
         </div>
     );
-
 }

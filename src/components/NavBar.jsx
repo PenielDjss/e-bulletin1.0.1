@@ -18,8 +18,10 @@ import ProfileIcon from "./ProfileIcon";
 export default function NavBar({
   userInitial = "U",
   variant = "sidebar",
-  isMenuOpen,
-  onToggleMenu,
+  isMobileMenuOpen,
+  onToggleMobileMenu,
+  onCloseMobile,
+  showCloseButton = false
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,22 +30,41 @@ export default function NavBar({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const currentPage = location.pathname.split("/").pop() || "bulletins";
 
+  // Fonction pour naviguer et fermer le menu mobile
+  const handleNavigation = (path) => {
+    navigate(path);
+    // Fermer le menu mobile après navigation
+    if (onCloseMobile) {
+      onCloseMobile();
+    }
+  };
+
   // Render sidebar content
   if (variant === "sidebar") {
     return (
       <div className="flex flex-col h-full">
-        {/* Logo */}
-        <div className="flex items-center justify-center h-14 p-4 border-b border-gray-200">
+        {/* Header avec logo et bouton fermer (mobile uniquement) */}
+        <div className="flex items-center justify-between h-14 p-4 border-b border-gray-200">
           <p className="font-bold text-lg bg-gradient-to-r from-sky-800 via-blue-400 to-indigo-900 bg-clip-text text-transparent">
             e-Bulletin
           </p>
+          
+          {/* Bouton fermer - visible seulement sur mobile */}
+          {showCloseButton && (
+            <button
+              onClick={onCloseMobile}
+              className="p-1 rounded-lg text-gray-500 hover:bg-gray-100 lg:hidden"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* Navigation Links */}
         <nav className="flex-1 px-1 py-4">
           <button
-            onClick={() => navigate("/bulletins")}
-            className={`w-full text-left text-sm flex items-center px-2 py-1 rounded-lg mb-1 ${
+            onClick={() => handleNavigation("/bulletins")}
+            className={`w-full text-left flex items-center px-2 py-1 rounded-lg mb-1 ${
               currentPage === "bulletins"
                 ? "bg-blue-50 text-blue-700"
                 : "text-gray-800 hover:bg-gray-100"
@@ -54,8 +75,8 @@ export default function NavBar({
           </button>
 
           <button
-            onClick={() => navigate("/conges")}
-            className={`w-full text-left text-sm flex items-center px-2 py-1 rounded-lg mb-1 ${
+            onClick={() => handleNavigation("/conges")}
+            className={`w-full text-left  flex items-center px-2 py-1 rounded-lg mb-1 ${
               currentPage === "conges"
                 ? "bg-blue-50 text-blue-700"
                 : "text-gray-800 hover:bg-gray-100"
@@ -66,8 +87,8 @@ export default function NavBar({
           </button>
 
           <button
-            onClick={() => navigate("/settings")}
-            className={`w-full text-left text-sm flex items-center px-2 py-1 rounded-lg mb-1 ${
+            onClick={() => handleNavigation("/settings")}
+            className={`w-full text-left  flex items-center px-2 py-1 rounded-lg mb-1 ${
               currentPage === "settings"
                 ? "bg-blue-50 text-blue-700"
                 : "text-gray-800 hover:bg-gray-100"
@@ -81,14 +102,19 @@ export default function NavBar({
         {/* Logout Button */}
         <div className="p-4 border-t border-gray-200">
           <button
-            onClick={logout}
-            className="w-full text-left text-sm flex items-center px-2 py-1 text-red-600 hover:bg-red-50 rounded-lg"
+            onClick={() => {
+              logout();
+              if (onCloseMobile) onCloseMobile();
+            }}
+            className="w-full text-left text-base  flex items-center px-2 py-1 text-red-600 hover:bg-red-50 rounded-lg"
           >
             <LogOut size={18} className="mr-3" />
             Se déconnecter
           </button>
         </div>
       </div>
+
+      
     );
   }
 
@@ -97,13 +123,13 @@ export default function NavBar({
     return (
       <>
         <div className="flex items-center justify-between h-full px-6">
-          {/* Left section - Toggle Menu */}
+          {/* Left section - Toggle Menu (mobile seulement) */}
           <div className="flex items-center">
             <button
-              onClick={onToggleMenu}
+              onClick={onToggleMobileMenu}
               className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 lg:hidden"
             >
-              {isMenuOpen ? <X size={20} /> : <MenuIcon size={20} />}
+              {isMobileMenuOpen ? <X size={20} /> : <MenuIcon size={20} />}
             </button>
 
             {/* Search Button */}
@@ -173,7 +199,6 @@ export default function NavBar({
                       Recherches récentes
                     </div>
                     <div className="space-y-2">
-                      {/* Vous pouvez ajouter ici des recherches récentes animées */}
                       <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
