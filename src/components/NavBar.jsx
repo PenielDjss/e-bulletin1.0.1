@@ -7,10 +7,9 @@ import {
   ScrollText,
   Calendar,
   Bell,
-  Search,
+  Search, 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ProfileIcon from "./ProfileIcon";
